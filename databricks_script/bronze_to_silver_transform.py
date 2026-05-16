@@ -1,7 +1,7 @@
 # Databricks notebook source
 storage_account_name = "frauddatastorage"
 container_name = "fraud-data-lake"
-access_key = "/Myaq2Ok6LJ1CEbi..THIS_WAS_mine bro use your own🙂"
+access_key = "/Myaq2Ok6LJ1CEbi..iam-SOMESH-N-THIS_KEY-WAS_mine-bro-use-your-own🙂"
 
 # COMMAND ----------
 
