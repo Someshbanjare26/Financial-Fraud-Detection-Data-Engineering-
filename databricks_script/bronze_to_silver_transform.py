@@ -29,7 +29,7 @@ display(df_batch)
 
 from pyspark.sql.functions import col, when
 
-# 1. Duplicates remove 
+# 1. for Duplicates remove 
 df_clean = df_batch.dropDuplicates()
 
 # 2. Risk level seting (Amount ko double me cast karke filter lagaya hai taaki safer rahe)
@@ -94,7 +94,7 @@ display(df_stream_clean)
 # 1. Silver stream data ka path set kiya 
 stream_silver_path = f"abfss://{container_name}@{storage_account_name}.dfs.core.windows.net/silver/processed_streaming/"
 
-# 2. Authenticated write execute karo
+# 2. Authenticated write execute ke liye ye wla part of code
 df_stream_clean.write \
     .mode("overwrite") \
     .option(f"fs.azure.account.key.{storage_account_name}.dfs.core.windows.net", access_key) \
@@ -102,50 +102,50 @@ df_stream_clean.write \
 
 # COMMAND ----------
 
-# 1. Fraud Summary Analytics calculate karo
+# 1. Fraud Summary Analytics calculate karne ke liye tis iss
 fraud_summary = df_clean.groupBy("risk_level").count()
 
-# 2. Output check karo
+# 2. for cheking Output 
 display(fraud_summary)
 
 # COMMAND ----------
 
 from pyspark.sql.functions import col
 
-# 1. High Risk Transactions filter karo
+# 1. this is for High Risk Transactions filter 
 high_risk_txns = df_stream_clean.filter(
     col("transaction_category") == "High Value"
 )
 
-# 2. Output check karo
+# 2. for checking Output check
 display(high_risk_txns)
 
 # COMMAND ----------
 
-# 1. Location Wise Analysis calculate karo
+# 1. for Location Wise Analysis calculate 
 location_analysis = df_stream_clean.groupBy("location").count()
 
-# 2. Output check karo
+# 2. for Output check 
 display(location_analysis)
 
 # COMMAND ----------
 
-# Paths define karo
+# Paths defining 
 gold_fraud_path = f"abfss://{container_name}@{storage_account_name}.dfs.core.windows.net/gold/fraud_summary/"
 gold_location_path = f"abfss://{container_name}@{storage_account_name}.dfs.core.windows.net/gold/location_analysis/"
 gold_highrisk_path = f"abfss://{container_name}@{storage_account_name}.dfs.core.windows.net/gold/high_risk_transactions/"
 
-# A. Fraud Summary ko Gold layer me write karo
+# A. writing Fraud Summary in the Gold layer me 
 fraud_summary.write.mode("overwrite") \
     .option(f"fs.azure.account.key.{storage_account_name}.dfs.core.windows.net", access_key) \
     .parquet(gold_fraud_path)
 
-# B. Location Analysis ko Gold layer me write karo
+# B. wirting Location Analysis in the  Gold layer  
 location_analysis.write.mode("overwrite") \
     .option(f"fs.azure.account.key.{storage_account_name}.dfs.core.windows.net", access_key) \
     .parquet(gold_location_path)
 
-# C. High Risk Transactions ko Gold layer me write karo
+# C. writing High Risk Transactions in the Gold layer 
 high_risk_txns.write.mode("overwrite") \
     .option(f"fs.azure.account.key.{storage_account_name}.dfs.core.windows.net", access_key) \
     .parquet(gold_highrisk_path)
