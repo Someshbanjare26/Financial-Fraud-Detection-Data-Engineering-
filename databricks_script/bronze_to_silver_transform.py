@@ -5,7 +5,7 @@ access_key = "/Myaq2Ok6LJ1CEbi..iam-SOMESH-N-THIS_KEY-WAS_mine-bro-use-your-ownð
 
 # COMMAND ----------
 
-# Direct options me key pass kar do
+# key passing on Direct options 
 df = spark.read.format("csv") \
     .option("header", "true") \
     .option(f"fs.azure.account.key.{storage_account_name}.dfs.core.windows.net", access_key) \
@@ -14,7 +14,7 @@ df = spark.read.format("csv") \
 # COMMAND ----------
 
 
-# Exact file tak ka full path
+# Exact file full path
 batch_path = f"abfss://{container_name}@{storage_account_name}.dfs.core.windows.net/bronze/batch/api/v1/datasets/download/mlg-ulb/creditcardfraud/creditcard.csv"
 
 df_batch = spark.read.format("csv") \
@@ -29,10 +29,10 @@ display(df_batch)
 
 from pyspark.sql.functions import col, when
 
-# 1. Duplicates remove karein
+# 1. Duplicates remove 
 df_clean = df_batch.dropDuplicates()
 
-# 2. Risk level set karein (Amount ko double me cast karke filter lagaya hai taaki safer rahe)
+# 2. Risk level seting (Amount ko double me cast karke filter lagaya hai taaki safer rahe)
 df_clean = df_clean.withColumn(
     "risk_level",
     when(col("Amount").cast("double") > 2000, "High")
@@ -40,15 +40,15 @@ df_clean = df_clean.withColumn(
     .otherwise("Low")
 )
 
-# 3. Final transformation output dekhein
+# 3. Final transformation output 
 display(df_clean)
 
 # COMMAND ----------
 
-# 1. Silver layer ka path define karo
+# 1. define  path of Silver layer 
 silver_path = f"abfss://{container_name}@{storage_account_name}.dfs.core.windows.net/silver/processed_batch/"
 
-# 2. Key configuration ke sath Parquet format me data write karo
+# 2. Key configuration ke sath Parquet format me data write kiya 
 df_clean.write \
     .mode("overwrite") \
     .option(f"fs.azure.account.key.{storage_account_name}.dfs.core.windows.net", access_key) \
@@ -56,29 +56,29 @@ df_clean.write \
 
 # COMMAND ----------
 
-# 1. Path set karo
+# 1. seting up path
 stream_path = f"abfss://{container_name}@{storage_account_name}.dfs.core.windows.net/bronze/streaming/"
 
-# 2. Key configuration ke sath JSON data read karo
+# 2. JSON data read with Key configuratio  
 df_stream = spark.read.format("json") \
     .option("inferSchema", "true") \
     .option(f"fs.azure.account.key.{storage_account_name}.dfs.core.windows.net", access_key) \
     .load(stream_path)
 
-# 3. Output display karo (Isme aapko transaction_id, user_id wale columns milenge)
+# 3. Output display (Isme transaction_id, user_id wale columns milenge)
 display(df_stream)
 
 # COMMAND ----------
 
 from pyspark.sql.functions import current_timestamp, when, col
 
-# 1. Processing timestamp add karo
+# 1. Processing timestamp added
 df_stream_clean = df_stream.withColumn(
     "processed_time",
     current_timestamp()
 )
 
-# 2. Transaction segmentation login lagao
+# 2. Transaction segmentation login add kiya
 df_stream_clean = df_stream_clean.withColumn(
     "transaction_category",
     when(col("amount") > 30000, "High Value")
@@ -86,12 +86,12 @@ df_stream_clean = df_stream_clean.withColumn(
     .otherwise("Low Value")
 )
 
-# 3. Transformed data check karo
+# 3. for checking the Transformed data
 display(df_stream_clean)
 
 # COMMAND ----------
 
-# 1. Silver stream path set karo
+# 1. Silver stream data ka path set kiya 
 stream_silver_path = f"abfss://{container_name}@{storage_account_name}.dfs.core.windows.net/silver/processed_streaming/"
 
 # 2. Authenticated write execute karo
